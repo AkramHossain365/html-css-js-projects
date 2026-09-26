@@ -1,0 +1,1936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>World Explorer</title>
+
+  <!-- D3 -->
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+
+  <!-- TopoJSON -->
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #fff;
+
+      background:
+        radial-gradient(
+          circle at 15% 25%,
+          rgba(0, 120, 255, 0.18),
+          transparent 32%
+        ),
+        radial-gradient(
+          circle at 85% 75%,
+          rgba(0, 200, 255, 0.10),
+          transparent 30%
+        ),
+        linear-gradient(
+          135deg,
+          #01040a,
+          #06172d 50%,
+          #01040a
+        );
+
+      overflow-x: hidden;
+    }
+
+    /* Background stars */
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+
+      pointer-events: none;
+
+      opacity: 0.35;
+
+      background-image:
+        radial-gradient(
+          circle,
+          rgba(255,255,255,0.8) 1px,
+          transparent 1px
+        ),
+        radial-gradient(
+          circle,
+          rgba(100,190,255,0.7) 1px,
+          transparent 1px
+        );
+
+      background-size:
+        100px 100px,
+        160px 160px;
+
+      background-position:
+        20px 30px,
+        70px 90px;
+    }
+
+    /* PAGE */
+
+    .page {
+      position: relative;
+      z-index: 1;
+
+      min-height: 100vh;
+
+      max-width: 1450px;
+
+      margin: auto;
+
+      padding: 40px;
+
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* HEADER */
+
+    .header {
+      text-align: center;
+
+      margin-bottom: 15px;
+    }
+
+    .header h1 {
+      font-size: clamp(30px, 4vw, 48px);
+
+      font-weight: 800;
+
+      letter-spacing: 1px;
+
+      background:
+        linear-gradient(
+          90deg,
+          #ffffff,
+          #72d2ff
+        );
+
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header p {
+      margin-top: 9px;
+
+      color: #8fa9c3;
+
+      font-size: 14px;
+    }
+
+    /* MAIN */
+
+    .main {
+      flex: 1;
+
+      display: grid;
+
+      grid-template-columns:
+        minmax(500px, 1fr)
+        390px;
+
+      gap: 65px;
+
+      align-items: center;
+    }
+
+    /* GLOBE */
+
+    .globe-section {
+      display: flex;
+
+      justify-content: center;
+
+      align-items: center;
+
+      min-width: 0;
+    }
+
+    .globe-container {
+      position: relative;
+
+      width: min(610px, 100%);
+
+      aspect-ratio: 1 / 1;
+
+      display: flex;
+
+      justify-content: center;
+
+      align-items: center;
+    }
+
+    .globe-container::before {
+      content: "";
+
+      position: absolute;
+
+      width: 88%;
+      height: 88%;
+
+      border-radius: 50%;
+
+      background:
+        rgba(0, 100, 220, 0.12);
+
+      filter: blur(40px);
+
+      box-shadow:
+        0 0 80px rgba(0, 130, 255, 0.35),
+        0 0 160px rgba(0, 100, 255, 0.16);
+    }
+
+    #globe {
+      position: relative;
+
+      width: 100%;
+      height: 100%;
+
+      overflow: visible;
+
+      cursor: grab;
+    }
+
+    #globe:active {
+      cursor: grabbing;
+    }
+
+    /* SEARCH PANEL */
+
+    .search-panel {
+      width: 100%;
+
+      max-width: 390px;
+
+      padding: 30px;
+
+      border-radius: 24px;
+
+      background:
+        rgba(7, 22, 43, 0.84);
+
+      border:
+        1px solid rgba(120, 190, 255, 0.22);
+
+      box-shadow:
+        0 25px 70px rgba(0, 0, 0, 0.45),
+        inset 0 1px rgba(255,255,255,0.07);
+
+      backdrop-filter: blur(18px);
+    }
+
+    .search-panel h2 {
+      font-size: 25px;
+
+      margin-bottom: 8px;
+    }
+
+    .description {
+      color: #91aac4;
+
+      font-size: 14px;
+
+      line-height: 1.6;
+
+      margin-bottom: 22px;
+    }
+
+    /* SEARCH */
+
+    .search-box {
+      position: relative;
+    }
+
+    #countryInput {
+      width: 100%;
+
+      padding: 15px 48px 15px 17px;
+
+      border-radius: 13px;
+
+      border:
+        1px solid rgba(120, 190, 255, 0.28);
+
+      outline: none;
+
+      background:
+        rgba(0, 9, 22, 0.75);
+
+      color: #fff;
+
+      font-size: 15px;
+
+      transition: 0.25s;
+    }
+
+    #countryInput::placeholder {
+      color: #6d849c;
+    }
+
+    #countryInput:focus {
+      border-color: #40baff;
+
+      box-shadow:
+        0 0 0 3px rgba(60, 190, 255, 0.09),
+        0 0 25px rgba(0, 130, 255, 0.14);
+    }
+
+    .search-icon {
+      position: absolute;
+
+      right: 16px;
+
+      top: 50%;
+
+      transform: translateY(-50%);
+
+      color: #61c9ff;
+
+      font-size: 20px;
+
+      pointer-events: none;
+    }
+
+    /* AUTOCOMPLETE */
+
+    .suggestions {
+      position: absolute;
+
+      left: 0;
+      right: 0;
+
+      top: calc(100% + 7px);
+
+      z-index: 20;
+
+      max-height: 230px;
+
+      overflow-y: auto;
+
+      border-radius: 13px;
+
+      background:
+        rgba(5, 17, 34, 0.98);
+
+      border:
+        1px solid rgba(100, 180, 255, 0.20);
+
+      box-shadow:
+        0 20px 45px rgba(0,0,0,0.45);
+
+      display: none;
+    }
+
+    .suggestion {
+      padding: 11px 14px;
+
+      font-size: 13px;
+
+      color: #b9d4eb;
+
+      cursor: pointer;
+
+      border-bottom:
+        1px solid rgba(255,255,255,0.04);
+    }
+
+    .suggestion:last-child {
+      border-bottom: none;
+    }
+
+    .suggestion:hover {
+      background:
+        rgba(30, 130, 220, 0.22);
+
+      color: #fff;
+    }
+
+    /* BUTTON */
+
+    #searchBtn {
+      width: 100%;
+
+      margin-top: 13px;
+
+      padding: 15px;
+
+      border: none;
+
+      border-radius: 13px;
+
+      cursor: pointer;
+
+      color: white;
+
+      font-size: 15px;
+
+      font-weight: 700;
+
+      background:
+        linear-gradient(
+          135deg,
+          #087cff,
+          #00b7ff
+        );
+
+      box-shadow:
+        0 8px 25px rgba(0,130,255,0.28);
+
+      transition: 0.25s;
+    }
+
+    #searchBtn:hover {
+      transform: translateY(-2px);
+
+      box-shadow:
+        0 12px 30px rgba(0,150,255,0.42);
+    }
+
+    #searchBtn:active {
+      transform: translateY(0);
+    }
+
+    /* RESULT */
+
+    .result {
+      margin-top: 23px;
+
+      padding: 17px;
+
+      border-radius: 14px;
+
+      background:
+        rgba(0, 20, 45, 0.65);
+
+      border:
+        1px solid rgba(100,180,255,0.13);
+
+      min-height: 75px;
+    }
+
+    .result-label {
+      font-size: 10px;
+
+      text-transform: uppercase;
+
+      letter-spacing: 1.5px;
+
+      color: #6f9abb;
+
+      margin-bottom: 6px;
+    }
+
+    #resultText {
+      color: #dff5ff;
+
+      font-size: 16px;
+
+      font-weight: 600;
+    }
+
+    /* COUNTRY INFO */
+
+    .info {
+      display: grid;
+
+      grid-template-columns: 1fr 1fr;
+
+      gap: 10px;
+
+      margin-top: 15px;
+    }
+
+    .info-box {
+      padding: 12px;
+
+      border-radius: 12px;
+
+      background:
+        rgba(0, 20, 45, 0.45);
+
+      border:
+        1px solid rgba(100,180,255,0.1);
+    }
+
+    .info-box small {
+      display: block;
+
+      color: #6685a3;
+
+      font-size: 9px;
+
+      text-transform: uppercase;
+
+      letter-spacing: 1px;
+
+      margin-bottom: 5px;
+    }
+
+    .info-box span {
+      color: #bde9ff;
+
+      font-size: 12px;
+    }
+
+    /* FOOTER 
+
+    .footer {
+      text-align: center;
+
+      margin-top: 20px;
+
+      color: #526b84;
+
+      font-size: 11px;
+    }
+    */
+
+    /* MAP */
+
+    .sphere {
+      fill: #06182c;
+
+      stroke: #3e9bd9;
+
+      stroke-width: 1.5;
+
+      filter:
+        drop-shadow(
+          0 0 25px rgba(0,130,255,0.35)
+        );
+    }
+
+    .graticule {
+      fill: none;
+
+      stroke:
+        rgba(80,170,220,0.12);
+
+      stroke-width: 0.5;
+    }
+
+    .country {
+      fill: #173a5d;
+
+      stroke: #4d82aa;
+
+      stroke-width: 0.45;
+
+      transition:
+        fill 0.2s,
+        stroke 0.2s;
+    }
+
+    .country:hover {
+      fill: #28658f;
+    }
+
+    .country.selected {
+      fill: #ff304e;
+
+      stroke: #fff;
+
+      stroke-width: 1.3;
+
+      filter:
+        drop-shadow(
+          0 0 8px rgba(255,40,70,0.85)
+        );
+    }
+
+    .country.neighbor {
+      fill: #bd8a1e;
+
+      stroke: #f7d46a;
+
+      stroke-width: 0.65;
+    }
+
+    /* RESPONSIVE */
+
+    @media (max-width: 1050px) {
+
+      .main {
+        grid-template-columns: 1fr;
+
+        gap: 20px;
+      }
+
+      .globe-section {
+        order: 1;
+      }
+
+      .search-panel {
+        order: 2;
+
+        max-width: 600px;
+
+        margin:
+          0 auto;
+      }
+
+      .globe-container {
+        width: min(560px, 92vw);
+      }
+    }
+
+    @media (max-width: 600px) {
+
+      .page {
+        padding: 28px 15px;
+      }
+
+      .header {
+        margin-bottom: 15px;
+      }
+
+      .header p {
+        font-size: 12px;
+      }
+
+      .globe-container {
+        width: 96vw;
+      }
+
+      .search-panel {
+        padding: 23px;
+
+        border-radius: 20px;
+      }
+
+      .search-panel h2 {
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="page">
+
+    <!-- HEADER -->
+
+    <header class="header">
+
+      <h1>
+        Explore the World
+      </h1>
+
+      <p>
+        Search for any country and discover it on the globe.
+      </p>
+
+    </header>
+
+
+    <!-- MAIN -->
+
+    <main class="main">
+
+      <!-- LEFT: GLOBE -->
+
+      <section class="globe-section">
+
+        <div class="globe-container">
+
+          <svg
+            id="globe"
+            viewBox="0 0 600 600"
+          ></svg>
+
+        </div>
+
+      </section>
+
+
+      <!-- RIGHT: SEARCH -->
+
+      <aside class="search-panel">
+
+        <h2>
+          Find a Country
+        </h2>
+
+        <p class="description">
+          Enter a country name. The globe will rotate
+          toward it and highlight the country and its
+          actual neighboring countries.
+        </p>
+
+
+        <!-- SEARCH -->
+
+        <div class="search-box">
+
+          <input
+            id="countryInput"
+            type="text"
+            placeholder="e.g. Bangladesh"
+            autocomplete="off"
+          >
+
+          <span class="search-icon">
+            ⌕
+          </span>
+
+          <div
+            id="suggestions"
+            class="suggestions"
+          ></div>
+
+        </div>
+
+
+        <button id="searchBtn">
+          Explore Country
+        </button>
+
+
+        <!-- RESULT -->
+
+        <div class="result">
+
+          <div class="result-label">
+            Selected Country
+          </div>
+
+          <div id="resultText">
+            Search for a country
+          </div>
+
+        </div>
+
+
+        <!-- INFO -->
+
+        <div class="info">
+
+          <div class="info-box">
+
+            <small>
+              Countries
+            </small>
+
+            <span id="countryCount">
+              Loading...
+            </span>
+
+          </div>
+
+          <div class="info-box">
+
+            <small>
+              View
+            </small>
+
+            <span>
+              Interactive Globe
+            </span>
+
+          </div>
+
+        </div>
+
+      </aside>
+
+    </main>
+
+
+    <!-- <footer class="footer">
+      Drag the globe to explore manually.
+    </footer> -->
+
+  </div>
+
+
+  <script>
+
+    /*
+    ============================================================
+      DATA SOURCES
+    ============================================================
+    */
+
+    const WORLD_MAP =
+      "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
+
+    const COUNTRY_DATA =
+      "https://cdn.jsdelivr.net/npm/world-countries@5.1.0/countries.json";
+
+
+    /*
+    ============================================================
+      SVG / PROJECTION
+    ============================================================
+    */
+
+    const svg =
+      d3.select("#globe");
+
+    const width = 600;
+    const height = 600;
+
+    const projection =
+      d3.geoOrthographic()
+        .scale(285)
+        .translate([
+          width / 2,
+          height / 2
+        ])
+        .clipAngle(90);
+
+    const path =
+      d3.geoPath()
+        .projection(projection);
+
+
+    /*
+    ============================================================
+      SPHERE
+    ============================================================
+    */
+
+    svg
+      .append("path")
+      .datum({
+        type: "Sphere"
+      })
+      .attr(
+        "class",
+        "sphere"
+      )
+      .attr(
+        "d",
+        path
+      );
+
+
+    /*
+    ============================================================
+      GRATICULE
+    ============================================================
+    */
+
+    const graticule =
+      d3.geoGraticule();
+
+    svg
+      .append("path")
+      .datum(
+        graticule()
+      )
+      .attr(
+        "class",
+        "graticule"
+      )
+      .attr(
+        "d",
+        path
+      );
+
+
+    /*
+    ============================================================
+      COUNTRY GROUP
+    ============================================================
+    */
+
+    const countriesGroup =
+      svg.append("g");
+
+
+    /*
+    ============================================================
+      VARIABLES
+    ============================================================
+    */
+
+    let countries = [];
+
+    let countryDatabase = [];
+
+    let countryByCode = new Map();
+
+    let adjacency = [];
+
+    let selectedCountry = null;
+
+
+    /*
+    ============================================================
+      COMMON SEARCH ALIASES
+    ============================================================
+    */
+
+    const aliases = {
+
+      "usa": "United States",
+      "us": "United States",
+      "u.s.": "United States",
+      "u.s.a.": "United States",
+      "america": "United States",
+
+      "uk": "United Kingdom",
+      "great britain": "United Kingdom",
+      "britain": "United Kingdom",
+      "england": "United Kingdom",
+
+      "uae": "United Arab Emirates",
+
+      "south korea": "South Korea",
+      "korea": "South Korea",
+      "republic of korea": "South Korea",
+
+      "north korea":
+        "North Korea",
+
+      "russia":
+        "Russia",
+
+      "czechia":
+        "Czechia",
+
+      "burma":
+        "Myanmar",
+
+      "persia":
+        "Iran",
+
+      "holland":
+        "Netherlands",
+
+      "vietnam":
+        "Vietnam",
+
+      "laos":
+        "Laos",
+
+      "bolivia":
+        "Bolivia",
+
+      "venezuela":
+        "Venezuela",
+
+      "tanzania":
+        "Tanzania",
+
+      "brunei":
+        "Brunei",
+
+      "cape verde":
+        "Cabo Verde",
+
+      "ivory coast":
+        "Côte d'Ivoire",
+
+      "swaziland":
+        "Eswatini",
+
+      "turkey":
+        "Türkiye"
+
+    };
+
+
+    /*
+    ============================================================
+      NORMALIZE ISO CODE
+    ============================================================
+    */
+
+    function normalizeCode(value) {
+
+      if (
+        value === null ||
+        value === undefined
+      ) {
+        return "";
+      }
+
+      /*
+        VERY IMPORTANT:
+
+        world-atlas may provide:
+
+        50
+        "50"
+        "050"
+
+        We convert all of them to:
+
+        "050"
+      */
+
+      return String(value)
+        .replace(/\D/g, "")
+        .padStart(3, "0");
+
+    }
+
+
+    /*
+    ============================================================
+      NORMALIZE TEXT
+    ============================================================
+    */
+
+    function normalizeText(value) {
+
+      return String(value || "")
+        .normalize("NFD")
+        .replace(
+          /[\u0300-\u036f]/g,
+          ""
+        )
+        .toLowerCase()
+        .trim();
+
+    }
+
+
+    /*
+    ============================================================
+      LOAD BOTH DATASETS
+    ============================================================
+    */
+
+    Promise.all([
+
+      d3.json(WORLD_MAP),
+
+      d3.json(COUNTRY_DATA)
+
+    ])
+    .then(([world, database]) => {
+
+      /*
+        Load country metadata
+      */
+
+      countryDatabase =
+        database;
+
+
+      /*
+        Create ISO numeric lookup
+
+        Example:
+
+        "050" -> Bangladesh
+      */
+
+      countryDatabase.forEach(country => {
+
+        const code =
+          normalizeCode(
+            country.ccn3
+          );
+
+        if (code) {
+
+          countryByCode.set(
+            code,
+            country
+          );
+
+        }
+
+      });
+
+
+      /*
+        Convert TopoJSON into GeoJSON
+      */
+
+      countries =
+        topojson
+          .feature(
+            world,
+            world.objects.countries
+          )
+          .features;
+
+
+      /*
+        REAL country adjacency
+
+        This gives countries that
+        actually share boundaries.
+      */
+
+      adjacency =
+        topojson.neighbors(
+          world.objects.countries.geometries
+        );
+
+
+      /*
+        Draw countries
+      */
+
+      countriesGroup
+        .selectAll(".country")
+        .data(countries)
+        .enter()
+        .append("path")
+        .attr(
+          "class",
+          "country"
+        )
+        .attr(
+          "d",
+          path
+        )
+        .attr(
+          "data-id",
+          d =>
+            normalizeCode(d.id)
+        );
+
+
+      /*
+        Show number of map features
+      */
+
+      document
+        .getElementById(
+          "countryCount"
+        )
+        .textContent =
+          countries.length +
+          " map regions";
+
+
+      redraw();
+
+
+      /*
+        Automatically test Bangladesh
+        in the lookup system.
+
+        This does NOT select it.
+        It only confirms the data
+        connection is working.
+      */
+
+      console.log(
+        "Bangladesh lookup:",
+        countryByCode.get("050")
+      );
+
+    })
+    .catch(error => {
+
+      console.error(
+        "Map loading error:",
+        error
+      );
+
+      document
+        .getElementById(
+          "resultText"
+        )
+        .textContent =
+          "Unable to load world map.";
+
+    });
+
+
+    /*
+    ============================================================
+      GET COUNTRY NAME FROM MAP FEATURE
+    ============================================================
+    */
+
+    function getCountryInfo(feature) {
+
+      if (!feature) {
+        return null;
+      }
+
+      const code =
+        normalizeCode(
+          feature.id
+        );
+
+      return countryByCode.get(code)
+        || null;
+    }
+
+
+    /*
+    ============================================================
+      GET COUNTRY NAME
+    ============================================================
+    */
+
+    function getCountryName(feature) {
+
+      const info =
+        getCountryInfo(feature);
+
+      if (
+        info &&
+        info.name &&
+        info.name.common
+      ) {
+
+        return info.name.common;
+
+      }
+
+      return "Unknown region";
+    }
+
+
+    /*
+    ============================================================
+      FIND COUNTRY
+    ============================================================
+    */
+
+    function findCountry(searchValue) {
+
+      let value =
+        normalizeText(
+          searchValue
+        );
+
+
+      /*
+        Apply aliases
+      */
+
+      const aliasKey =
+        value;
+
+      if (
+        aliases[aliasKey]
+      ) {
+
+        value =
+          normalizeText(
+            aliases[aliasKey]
+          );
+
+      }
+
+
+      /*
+        Search exact common name
+      */
+
+      for (
+        const feature of countries
+      ) {
+
+        const info =
+          getCountryInfo(
+            feature
+          );
+
+        if (!info) continue;
+
+
+        const common =
+          normalizeText(
+            info.name?.common
+          );
+
+
+        const official =
+          normalizeText(
+            info.name?.official
+          );
+
+
+        /*
+          Common name
+        */
+
+        if (
+          common === value
+        ) {
+
+          return feature;
+
+        }
+
+
+        /*
+          Official name
+        */
+
+        if (
+          official === value
+        ) {
+
+          return feature;
+
+        }
+
+
+        /*
+          Alpha-2 / Alpha-3
+        */
+
+        if (
+          normalizeText(
+            info.cca2
+          ) === value ||
+          normalizeText(
+            info.cca3
+          ) === value
+        ) {
+
+          return feature;
+
+        }
+
+
+        /*
+          Alternative spellings
+        */
+
+        if (
+          Array.isArray(
+            info.altSpellings
+          )
+        ) {
+
+          const found =
+            info.altSpellings.some(
+              spelling =>
+                normalizeText(
+                  spelling
+                ) === value
+            );
+
+          if (found) {
+
+            return feature;
+
+          }
+
+        }
+
+      }
+
+
+      return null;
+
+    }
+
+
+    /*
+    ============================================================
+      REDRAW
+    ============================================================
+    */
+
+    function redraw() {
+
+      svg
+        .selectAll("path")
+        .attr(
+          "d",
+          path
+        );
+
+    }
+
+
+    /*
+    ============================================================
+      ROTATE TO COUNTRY
+    ============================================================
+    */
+
+    function rotateToCountry(
+      country
+    ) {
+
+      if (!country) {
+        return;
+      }
+
+
+      const centroid =
+        d3.geoCentroid(
+          country
+        );
+
+
+      const targetRotation = [
+
+        -centroid[0],
+
+        -centroid[1],
+
+        0
+
+      ];
+
+
+      const currentRotation =
+        projection.rotate();
+
+
+      d3.transition()
+        .duration(1200)
+        .ease(
+          d3.easeCubicInOut
+        )
+        .tween(
+          "rotate",
+          () => {
+
+            const interpolate =
+              d3.interpolate(
+                currentRotation,
+                targetRotation
+              );
+
+
+            return function(t) {
+
+              projection.rotate(
+                interpolate(t)
+              );
+
+              redraw();
+
+            };
+
+          }
+        );
+
+    }
+
+
+    /*
+    ============================================================
+      HIGHLIGHT COUNTRY + REAL NEIGHBORS
+    ============================================================
+    */
+
+    function highlightCountry(
+      country
+    ) {
+
+      countriesGroup
+        .selectAll(".country")
+        .classed(
+          "selected",
+          false
+        )
+        .classed(
+          "neighbor",
+          false
+        );
+
+
+      /*
+        Find selected country index
+      */
+
+      const index =
+        countries.indexOf(
+          country
+        );
+
+
+      if (index === -1) {
+        return;
+      }
+
+
+      /*
+        Selected country
+      */
+
+      countriesGroup
+        .selectAll(".country")
+        .filter(
+          d => d === country
+        )
+        .classed(
+          "selected",
+          true
+        );
+
+
+      /*
+        REAL BORDERING COUNTRIES
+
+        Unlike the previous version,
+        this does NOT use distance.
+
+        topojson.neighbors()
+        determines countries that
+        actually share boundaries.
+      */
+
+      const neighborIndexes =
+        adjacency[index] || [];
+
+
+      countriesGroup
+        .selectAll(".country")
+        .filter(
+          (d, i) =>
+            neighborIndexes.includes(i)
+        )
+        .classed(
+          "neighbor",
+          true
+        );
+
+    }
+
+
+    /*
+    ============================================================
+      SEARCH
+    ============================================================
+    */
+
+    function searchCountry() {
+
+      const input =
+        document
+          .getElementById(
+            "countryInput"
+          )
+          .value
+          .trim();
+
+
+      if (!input) {
+
+        document
+          .getElementById(
+            "resultText"
+          )
+          .textContent =
+            "Please enter a country name.";
+
+        return;
+
+      }
+
+
+      const found =
+        findCountry(
+          input
+        );
+
+
+      if (!found) {
+
+        document
+          .getElementById(
+            "resultText"
+          )
+          .textContent =
+            "Country not found. Try another name.";
+
+        return;
+
+      }
+
+
+      selectedCountry =
+        found;
+
+
+      /*
+        Highlight
+      */
+
+      highlightCountry(
+        found
+      );
+
+
+      /*
+        Country information
+      */
+
+      const info =
+        getCountryInfo(
+          found
+        );
+
+
+      const name =
+        info?.name?.common
+        || "Unknown country";
+
+
+      document
+        .getElementById(
+          "resultText"
+        )
+        .textContent =
+          name;
+
+
+      /*
+        Rotate
+      */
+
+      rotateToCountry(
+        found
+      );
+
+
+      /*
+        Close suggestions
+      */
+
+      hideSuggestions();
+
+    }
+
+
+    /*
+    ============================================================
+      SEARCH BUTTON
+    ============================================================
+    */
+
+    document
+      .getElementById(
+        "searchBtn"
+      )
+      .addEventListener(
+        "click",
+        searchCountry
+      );
+
+
+    /*
+    ============================================================
+      ENTER KEY
+    ============================================================
+    */
+
+    document
+      .getElementById(
+        "countryInput"
+      )
+      .addEventListener(
+        "keydown",
+        event => {
+
+          if (
+            event.key === "Enter"
+          ) {
+
+            searchCountry();
+
+          }
+
+          if (
+            event.key === "Escape"
+          ) {
+
+            hideSuggestions();
+
+          }
+
+        }
+      );
+
+
+    /*
+    ============================================================
+      AUTOCOMPLETE
+    ============================================================
+    */
+
+    const input =
+      document.getElementById(
+        "countryInput"
+      );
+
+    const suggestions =
+      document.getElementById(
+        "suggestions"
+      );
+
+
+    input.addEventListener(
+      "input",
+      () => {
+
+        const value =
+          normalizeText(
+            input.value
+          );
+
+
+        if (
+          value.length < 2
+        ) {
+
+          hideSuggestions();
+
+          return;
+
+        }
+
+
+        const results = [];
+
+
+        for (
+          const feature of countries
+        ) {
+
+          const info =
+            getCountryInfo(
+              feature
+            );
+
+          if (!info) continue;
+
+
+          const common =
+            info.name?.common
+            || "";
+
+
+          const normalized =
+            normalizeText(
+              common
+            );
+
+
+          if (
+            normalized.includes(
+              value
+            )
+          ) {
+
+            results.push({
+              feature,
+              name: common
+            });
+
+          }
+
+
+          if (
+            results.length >= 8
+          ) {
+
+            break;
+
+          }
+
+        }
+
+
+        if (
+          results.length === 0
+        ) {
+
+          hideSuggestions();
+
+          return;
+
+        }
+
+
+        suggestions.innerHTML =
+          "";
+
+
+        results.forEach(
+          result => {
+
+            const item =
+              document.createElement(
+                "div"
+              );
+
+
+            item.className =
+              "suggestion";
+
+
+            item.textContent =
+              result.name;
+
+
+            item.addEventListener(
+              "click",
+              () => {
+
+                input.value =
+                  result.name;
+
+                searchCountry();
+
+              }
+            );
+
+
+            suggestions.appendChild(
+              item
+            );
+
+          }
+        );
+
+
+        suggestions.style.display =
+          "block";
+
+      }
+    );
+
+
+    /*
+    ============================================================
+      HIDE SUGGESTIONS
+    ============================================================
+    */
+
+    function hideSuggestions() {
+
+      suggestions.style.display =
+        "none";
+
+    }
+
+
+    /*
+    ============================================================
+      CLICK OUTSIDE
+    ============================================================
+    */
+
+    document.addEventListener(
+      "click",
+      event => {
+
+        if (
+          !event.target.closest(
+            ".search-box"
+          )
+        ) {
+
+          hideSuggestions();
+
+        }
+
+      }
+    );
+
+
+    /*
+    ============================================================
+      DRAG GLOBE
+    ============================================================
+    */
+
+    let dragStart = null;
+
+    let rotationStart = null;
+
+
+    svg.call(
+
+      d3.drag()
+
+        .on(
+          "start",
+          event => {
+
+            dragStart = [
+              event.x,
+              event.y
+            ];
+
+
+            rotationStart =
+              projection.rotate();
+
+          }
+        )
+
+        .on(
+          "drag",
+          event => {
+
+            const dx =
+              event.x -
+              dragStart[0];
+
+
+            const dy =
+              event.y -
+              dragStart[1];
+
+
+            const sensitivity =
+              0.35;
+
+
+            projection.rotate([
+
+              rotationStart[0] +
+              dx * sensitivity,
+
+              rotationStart[1] -
+              dy * sensitivity,
+
+              rotationStart[2]
+
+            ]);
+
+
+            redraw();
+
+          }
+        )
+
+    );
+
+
+    /*
+    ============================================================
+      RESPONSIVE
+    ============================================================
+    */
+
+    window.addEventListener(
+      "resize",
+      redraw
+    );
+
+  </script>
+
+</body>
+</html>
