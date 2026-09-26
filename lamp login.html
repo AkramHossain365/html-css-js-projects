@@ -1,0 +1,1461 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Lamp Login</title>
+
+<style>
+
+/* =========================================================
+   RESET
+========================================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+}
+
+body {
+    overflow: hidden;
+
+    font-family: Arial, Helvetica, sans-serif;
+
+    background: #080808;
+
+    color: white;
+}
+
+
+/* =========================================================
+   PAGE
+========================================================= */
+
+.page {
+    width: 100%;
+    height: 100vh;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    position: relative;
+}
+
+
+/* =========================================================
+   MAIN SCENE
+========================================================= */
+
+.scene {
+    width: 1000px;
+    max-width: 94vw;
+    height: 650px;
+
+    position: relative;
+
+    display: flex;
+    align-items: center;
+}
+
+
+/* =========================================================
+   LAMP SIDE
+========================================================= */
+
+.lamp-area {
+    width: 48%;
+    height: 100%;
+
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+/* =========================================================
+   LIGHT EFFECT
+
+   IMPORTANT:
+   These effects are direct children of .lamp-area.
+   JavaScript adds "light-on" to .lamp-area.
+========================================================= */
+
+
+/* Large soft glow */
+
+.lamp-area::before {
+    content: "";
+
+    position: absolute;
+
+    left: 50%;
+    top: 210px;
+
+    width: 420px;
+    height: 430px;
+
+    transform:
+        translateX(-50%)
+        scale(0.25);
+
+    transform-origin: top center;
+
+    border-radius: 50%;
+
+    background:
+        radial-gradient(
+            ellipse at center,
+            rgba(255, 220, 130, 0.32) 0%,
+            rgba(255, 200, 90, 0.16) 35%,
+            rgba(255, 180, 70, 0.05) 58%,
+            transparent 75%
+        );
+
+    filter: blur(8px);
+
+    opacity: 0;
+
+    pointer-events: none;
+
+    z-index: 1;
+
+    transition:
+        opacity 0.7s ease,
+        transform 1.2s cubic-bezier(.16,1,.3,1);
+}
+
+
+/* =========================================================
+   TRAPEZOID LIGHT
+========================================================= */
+
+.light-cone {
+    position: absolute;
+
+    left: 50%;
+    top: 205px;
+
+    width: 270px;
+    height: 390px;
+
+    transform:
+        translateX(-50%)
+        scaleY(0.05);
+
+    transform-origin: top center;
+
+    clip-path: polygon(
+        32% 0%,
+        68% 0%,
+        100% 100%,
+        0% 100%
+    );
+
+    background:
+        linear-gradient(
+            to bottom,
+            rgba(255, 240, 175, 0.65),
+            rgba(255, 218, 120, 0.28) 35%,
+            rgba(255, 200, 90, 0.10) 70%,
+            rgba(255, 190, 80, 0)
+        );
+
+    filter: blur(3px);
+
+    opacity: 0;
+
+    pointer-events: none;
+
+    z-index: 2;
+
+    transition:
+        opacity 0.45s ease,
+        transform 1.1s cubic-bezier(.16,1,.3,1);
+}
+
+
+/* =========================================================
+   LIGHT ON
+========================================================= */
+
+.lamp-area.light-on::before {
+    opacity: 1;
+
+    transform:
+        translateX(-50%)
+        scale(1);
+}
+
+
+.lamp-area.light-on .light-cone {
+    opacity: 1;
+
+    transform:
+        translateX(-50%)
+        scaleY(1);
+}
+
+
+/* =========================================================
+   LAMP
+========================================================= */
+
+.lamp {
+    width: 300px;
+    height: 480px;
+
+    position: relative;
+
+    z-index: 10;
+}
+
+
+/* =========================================================
+   LAMP SHADE
+========================================================= */
+
+.lamp-shade {
+    position: absolute;
+
+    left: 40px;
+    top: 70px;
+
+    width: 220px;
+    height: 155px;
+
+    clip-path: polygon(
+        18% 0%,
+        82% 0%,
+        100% 100%,
+        0% 100%
+    );
+
+    border-radius: 5px;
+
+    background:
+        linear-gradient(
+            to bottom,
+            #444,
+            #252525
+        );
+
+    transition:
+        background 0.5s ease,
+        box-shadow 0.5s ease,
+        filter 0.5s ease;
+}
+
+
+/* =========================================================
+   BULB
+========================================================= */
+
+.bulb {
+    position: absolute;
+
+    left: 50%;
+    bottom: 18px;
+
+    width: 48px;
+    height: 48px;
+
+    transform: translateX(-50%);
+
+    border-radius: 50%;
+
+    background: #111;
+
+    transition:
+        background 0.4s ease,
+        box-shadow 0.5s ease;
+}
+
+
+/* =========================================================
+   LAMP NECK
+========================================================= */
+
+.lamp-neck {
+    position: absolute;
+
+    left: 142px;
+    top: 225px;
+
+    width: 16px;
+    height: 125px;
+
+    border-radius: 5px;
+
+    background:
+        linear-gradient(
+            to right,
+            #292929,
+            #777,
+            #292929
+        );
+}
+
+
+/* =========================================================
+   LAMP BASE
+========================================================= */
+
+.lamp-base {
+    position: absolute;
+
+    left: 70px;
+    bottom: 40px;
+
+    width: 160px;
+    height: 34px;
+
+    border-radius: 50%;
+
+    background:
+        linear-gradient(
+            to bottom,
+            #777,
+            #303030
+        );
+
+    box-shadow:
+        0 5px 12px rgba(0,0,0,0.7);
+}
+
+
+/* =========================================================
+   LAMP ON
+========================================================= */
+
+.lamp.on .lamp-shade {
+
+    background:
+        linear-gradient(
+            to bottom,
+            #ffd866,
+            #ee9d25
+        );
+
+    filter: brightness(1.25);
+
+    box-shadow:
+        0 0 15px rgba(255,215,110,0.8),
+        0 0 40px rgba(255,195,70,0.6);
+}
+
+
+.lamp.on .bulb {
+
+    background: #fffbd8;
+
+    box-shadow:
+        0 0 10px #ffffff,
+        0 0 25px #ffe88e,
+        0 0 55px #ffc84c,
+        0 0 90px rgba(255,190,60,0.8);
+}
+
+
+/* =========================================================
+   SWITCH
+========================================================= */
+
+.switch {
+    position: absolute;
+
+    right: 0;
+    top: 60px;
+
+    width: 70px;
+    height: 330px;
+
+    z-index: 50;
+
+    user-select: none;
+}
+
+
+/* top attachment */
+
+.switch-top {
+    position: absolute;
+
+    left: 50%;
+    top: 0;
+
+    width: 13px;
+    height: 13px;
+
+    transform: translateX(-50%);
+
+    border-radius: 50%;
+
+    background: #aaa;
+
+    box-shadow:
+        0 0 4px rgba(255,255,255,0.4);
+}
+
+
+/* rope */
+
+.switch-rope {
+    position: absolute;
+
+    left: 50%;
+    top: 8px;
+
+    width: 3px;
+    height: 205px;
+
+    transform: translateX(-50%);
+
+    background:
+        linear-gradient(
+            to right,
+            #777,
+            #fff,
+            #777
+        );
+
+    border-radius: 3px;
+
+    transition:
+        height 0.2s ease;
+}
+
+
+/* white handle */
+
+.switch-handle {
+    position: absolute;
+
+    left: 50%;
+    top: 195px;
+
+    width: 34px;
+    height: 34px;
+
+    transform: translateX(-50%);
+
+    border-radius: 50%;
+
+    background:
+        radial-gradient(
+            circle at 35% 30%,
+            white,
+            #eeeeee 45%,
+            #bdbdbd
+        );
+
+    border: 2px solid white;
+
+    box-shadow:
+        0 2px 8px rgba(0,0,0,0.8),
+        0 0 10px rgba(255,255,255,0.7);
+
+    cursor: grab;
+
+    touch-action: none;
+
+    transition:
+        top 0.18s ease,
+        transform 0.15s ease;
+}
+
+
+.switch-handle:hover {
+    transform:
+        translateX(-50%)
+        scale(1.12);
+}
+
+
+.switch-handle:active {
+    cursor: grabbing;
+}
+
+
+/* switch pulled position */
+
+.switch.pulled .switch-rope {
+    height: 245px;
+}
+
+.switch.pulled .switch-handle {
+    top: 235px;
+}
+
+
+/* =========================================================
+   MOTHS
+========================================================= */
+
+.moths {
+    position: absolute;
+
+    left: 50%;
+    top: 225px;
+
+    width: 300px;
+    height: 350px;
+
+    transform: translateX(-50%);
+
+    z-index: 7;
+
+    pointer-events: none;
+
+    opacity: 0;
+
+    transition: opacity 0.7s ease;
+}
+
+
+.moths.active {
+    opacity: 1;
+}
+
+
+.moth {
+    position: absolute;
+
+    width: 7px;
+    height: 7px;
+
+    border-radius: 50%;
+
+    background: #fff4c7;
+
+    box-shadow:
+        0 0 5px #ffe89a,
+        0 0 12px rgba(255,220,120,0.8);
+}
+
+
+/* =========================================================
+   LOGIN SIDE
+========================================================= */
+
+.login-area {
+    width: 52%;
+    height: 100%;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    position: relative;
+
+    z-index: 40;
+}
+
+
+/* =========================================================
+   LOGIN BOX
+========================================================= */
+
+.login-box {
+    width: 370px;
+
+    padding: 42px;
+
+    border-radius: 18px;
+
+    background:
+        rgba(255,255,255,0.06);
+
+    border:
+        1px solid rgba(255,255,255,0.14);
+
+    box-shadow:
+        0 25px 70px rgba(0,0,0,0.55);
+
+    backdrop-filter: blur(12px);
+
+    /* Hidden but still exists */
+
+    opacity: 0;
+
+    visibility: hidden;
+
+    transform:
+        translateX(35px)
+        scale(0.96);
+
+    transition:
+        opacity 0.55s ease,
+        transform 0.55s ease,
+        visibility 0.55s;
+}
+
+
+/* visible when lamp is on */
+
+.login-box.visible {
+
+    opacity: 1;
+
+    visibility: visible;
+
+    transform:
+        translateX(0)
+        scale(1);
+}
+
+
+/* =========================================================
+   LOGIN TEXT
+========================================================= */
+
+.login-box h1 {
+    margin: 0 0 10px;
+
+    font-size: 32px;
+}
+
+
+.subtitle {
+    margin: 0 0 30px;
+
+    color: #999;
+
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   INPUTS
+========================================================= */
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+
+.input-group label {
+    display: block;
+
+    margin-bottom: 8px;
+
+    font-size: 14px;
+
+    color: #ddd;
+}
+
+
+.input-group input {
+    width: 100%;
+
+    padding: 14px 15px;
+
+    border: 1px solid #444;
+
+    border-radius: 8px;
+
+    outline: none;
+
+    background: #111;
+
+    color: white;
+
+    font-size: 15px;
+
+    transition:
+        border 0.3s ease,
+        box-shadow 0.3s ease;
+}
+
+
+.input-group input:focus {
+    border-color: #f5bd4f;
+
+    box-shadow:
+        0 0 15px rgba(245,189,79,0.2);
+}
+
+
+/* =========================================================
+   BUTTON
+========================================================= */
+
+.login-button {
+    width: 100%;
+
+    padding: 14px;
+
+    border: none;
+
+    border-radius: 8px;
+
+    background: #f5bd4f;
+
+    color: #111;
+
+    font-size: 16px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+
+.login-button:hover {
+    background: #ffd36d;
+
+    transform: translateY(-2px);
+}
+
+
+/* =========================================================
+   WELCOME
+========================================================= */
+
+.welcome {
+    display: none;
+
+    text-align: center;
+}
+
+
+.welcome.show {
+    display: block;
+}
+
+
+.welcome h2 {
+    color: #f5bd4f;
+
+    margin-bottom: 10px;
+}
+
+
+.welcome p {
+    color: #aaa;
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 750px) {
+
+    body {
+        overflow-y: auto;
+    }
+
+    .page {
+        height: auto;
+        min-height: 100vh;
+    }
+
+    .scene {
+        height: auto;
+        min-height: 100vh;
+
+        flex-direction: column;
+
+        padding: 20px;
+    }
+
+    .lamp-area {
+        width: 100%;
+        height: 500px;
+    }
+
+    .login-area {
+        width: 100%;
+        height: auto;
+
+        padding-bottom: 40px;
+    }
+
+    .login-box {
+        width: 100%;
+        max-width: 370px;
+    }
+
+    .switch {
+        right: 3%;
+    }
+}
+
+</style>
+</head>
+
+
+<body>
+
+<div class="page">
+
+    <div class="scene">
+
+
+        <!-- =================================================
+             LAMP
+        ================================================== -->
+
+        <div
+            class="lamp-area"
+            id="lampArea"
+        >
+
+            <!-- Trapezoid light -->
+
+            <div
+                class="light-cone"
+                id="lightCone"
+            ></div>
+
+
+            <!-- Lamp -->
+
+            <div
+                class="lamp"
+                id="lamp"
+            >
+
+                <div class="lamp-shade">
+
+                    <div class="bulb"></div>
+
+                </div>
+
+                <div class="lamp-neck"></div>
+
+                <div class="lamp-base"></div>
+
+            </div>
+
+
+            <!-- Moths -->
+
+            <div
+                class="moths"
+                id="moths"
+            ></div>
+
+
+            <!-- =================================================
+                 PULL SWITCH
+            ================================================== -->
+
+            <div
+                class="switch"
+                id="pullSwitch"
+            >
+
+                <div class="switch-top"></div>
+
+                <div class="switch-rope"></div>
+
+                <div
+                    class="switch-handle"
+                    id="switchHandle"
+                    title="Pull down"
+                ></div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             LOGIN
+        ================================================== -->
+
+        <div class="login-area">
+
+            <div
+                class="login-box"
+                id="loginBox"
+            >
+
+                <div id="loginContent">
+
+                    <h1>Welcome</h1>
+
+                    <p class="subtitle">
+                        Enter your details to continue.
+                    </p>
+
+
+                    <form id="loginForm">
+
+                        <div class="input-group">
+
+                            <label for="username">
+                                Username / Email
+                            </label>
+
+                            <input
+                                type="text"
+                                id="username"
+                                placeholder="Enter username or email"
+                                autocomplete="username"
+                                required
+                            >
+
+                        </div>
+
+
+                        <div class="input-group">
+
+                            <label for="password">
+                                Password
+                            </label>
+
+                            <input
+                                type="password"
+                                id="password"
+                                placeholder="Enter password"
+                                autocomplete="current-password"
+                                required
+                            >
+
+                        </div>
+
+
+                        <button
+                            type="submit"
+                            class="login-button"
+                        >
+                            Login
+                        </button>
+
+                    </form>
+
+                </div>
+
+
+                <!-- Welcome after login -->
+
+                <div
+                    class="welcome"
+                    id="welcome"
+                >
+
+                    <h2>Hello! 👋</h2>
+
+                    <p id="welcomeText">
+                        Welcome to the website.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   ELEMENTS
+========================================================= */
+
+const lampArea =
+    document.getElementById("lampArea");
+
+const lamp =
+    document.getElementById("lamp");
+
+const pullSwitch =
+    document.getElementById("pullSwitch");
+
+const switchHandle =
+    document.getElementById("switchHandle");
+
+const loginBox =
+    document.getElementById("loginBox");
+
+const loginForm =
+    document.getElementById("loginForm");
+
+const loginContent =
+    document.getElementById("loginContent");
+
+const welcome =
+    document.getElementById("welcome");
+
+const welcomeText =
+    document.getElementById("welcomeText");
+
+const username =
+    document.getElementById("username");
+
+const moths =
+    document.getElementById("moths");
+
+
+/* =========================================================
+   LAMP STATE
+========================================================= */
+
+let lampIsOn = false;
+
+
+/* =========================================================
+   DRAG STATE
+========================================================= */
+
+let dragging = false;
+
+let dragStarted = false;
+
+let startY = 0;
+
+
+/* =========================================================
+   TURN LAMP ON
+========================================================= */
+
+function turnLampOn() {
+
+    lampIsOn = true;
+
+    /*
+       Turn on lamp itself.
+    */
+
+    lamp.classList.add("on");
+
+
+    /*
+       Turn on the entire lighting system.
+       This is the important part that controls
+       the trapezoid light and the large glow.
+    */
+
+    lampArea.classList.add("light-on");
+
+
+    /*
+       Pull switch visually down.
+    */
+
+    pullSwitch.classList.add("pulled");
+
+
+    /*
+       Show login.
+    */
+
+    loginBox.classList.add("visible");
+
+
+    /*
+       Show moths.
+    */
+
+    moths.classList.add("active");
+
+    createMoths();
+}
+
+
+/* =========================================================
+   TURN LAMP OFF
+========================================================= */
+
+function turnLampOff() {
+
+    lampIsOn = false;
+
+
+    /*
+       Turn lamp off.
+    */
+
+    lamp.classList.remove("on");
+
+
+    /*
+       Remove lighting effect.
+    */
+
+    lampArea.classList.remove("light-on");
+
+
+    /*
+       Return switch.
+    */
+
+    pullSwitch.classList.remove("pulled");
+
+
+    /*
+       Hide login.
+    */
+
+    loginBox.classList.remove("visible");
+
+
+    /*
+       Hide moths.
+    */
+
+    moths.classList.remove("active");
+
+
+    /*
+       Remove moths.
+    */
+
+    moths.innerHTML = "";
+}
+
+
+/* =========================================================
+   TOGGLE
+========================================================= */
+
+function toggleLamp() {
+
+    if (lampIsOn) {
+
+        turnLampOff();
+
+    } else {
+
+        turnLampOn();
+
+    }
+}
+
+
+/* =========================================================
+   SIMPLE CLICK
+========================================================= */
+
+switchHandle.addEventListener(
+    "click",
+    function(event) {
+
+        /*
+           If a real drag happened, do not toggle again
+           from the click event.
+        */
+
+        if (dragStarted) {
+
+            dragStarted = false;
+
+            return;
+        }
+
+        toggleLamp();
+
+    }
+);
+
+
+/* =========================================================
+   POINTER DOWN
+========================================================= */
+
+switchHandle.addEventListener(
+    "pointerdown",
+    function(event) {
+
+        dragging = true;
+
+        dragStarted = false;
+
+        startY = event.clientY;
+
+        switchHandle.setPointerCapture(
+            event.pointerId
+        );
+
+    }
+);
+
+
+/* =========================================================
+   POINTER MOVE
+========================================================= */
+
+switchHandle.addEventListener(
+    "pointermove",
+    function(event) {
+
+        if (!dragging) {
+            return;
+        }
+
+
+        const distance =
+            event.clientY - startY;
+
+
+        /*
+           If moved down enough, consider this
+           a real pull.
+        */
+
+        if (distance > 15) {
+
+            dragStarted = true;
+
+            /*
+               Show pulled position while dragging.
+            */
+
+            pullSwitch.classList.add("pulled");
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   POINTER UP
+========================================================= */
+
+switchHandle.addEventListener(
+    "pointerup",
+    function(event) {
+
+        if (!dragging) {
+            return;
+        }
+
+
+        dragging = false;
+
+
+        /*
+           If user physically pulled down,
+           toggle once.
+        */
+
+        if (dragStarted) {
+
+            toggleLamp();
+
+        }
+
+
+        /*
+           If it was a simple click,
+           the click event handles it.
+        */
+
+        switchHandle.releasePointerCapture(
+            event.pointerId
+        );
+
+    }
+);
+
+
+/* =========================================================
+   CREATE MOTHS
+========================================================= */
+
+function createMoths() {
+
+    /*
+       Remove old moths.
+    */
+
+    moths.innerHTML = "";
+
+
+    /*
+       Number of moths.
+    */
+
+    const numberOfMoths = 15;
+
+
+    for (
+        let i = 0;
+        i < numberOfMoths;
+        i++
+    ) {
+
+        const moth =
+            document.createElement("div");
+
+
+        moth.className = "moth";
+
+
+        /*
+           Random position.
+        */
+
+        moth.style.left =
+            (Math.random() * 270) + "px";
+
+        moth.style.top =
+            (Math.random() * 320) + "px";
+
+
+        /*
+           Random size.
+        */
+
+        const size =
+            Math.random() * 5 + 4;
+
+        moth.style.width =
+            size + "px";
+
+        moth.style.height =
+            size + "px";
+
+
+        moths.appendChild(moth);
+
+
+        moveMoth(moth);
+
+    }
+}
+
+
+/* =========================================================
+   MOVE ONE MOTH
+========================================================= */
+
+function moveMoth(moth) {
+
+    if (!lampIsOn) {
+        return;
+    }
+
+
+    /*
+       New random position.
+    */
+
+    const newX =
+        Math.random() * 270;
+
+    const newY =
+        Math.random() * 320;
+
+
+    /*
+       Random movement speed.
+    */
+
+    const duration =
+        Math.random() * 1800 + 1200;
+
+
+    /*
+       Animate.
+    */
+
+    const animation =
+        moth.animate(
+            [
+                {
+                    transform: "translate(0, 0)"
+                },
+                {
+                    transform:
+                        "translate(" +
+                        (newX - moth.offsetLeft) +
+                        "px, " +
+                        (newY - moth.offsetTop) +
+                        "px)"
+                }
+            ],
+            {
+                duration: duration,
+                easing: "ease-in-out",
+                fill: "forwards"
+            }
+        );
+
+
+    animation.finished
+        .then(function() {
+
+            if (lampIsOn) {
+
+                moveMoth(moth);
+
+            }
+
+        })
+        .catch(function() {
+
+            /*
+               Animation was stopped.
+            */
+
+        });
+}
+
+
+/* =========================================================
+   LOGIN
+========================================================= */
+
+loginForm.addEventListener(
+    "submit",
+    function(event) {
+
+        event.preventDefault();
+
+
+        const name =
+            username.value.trim();
+
+
+        if (!name) {
+            return;
+        }
+
+
+        /*
+           No authentication is performed.
+           This is only a visual demo.
+        */
+
+        welcomeText.textContent =
+            "Welcome, " + name + "!";
+
+
+        loginContent.style.display =
+            "none";
+
+
+        welcome.classList.add("show");
+
+    }
+);
+
+</script>
+
+</body>
+</html>
+
