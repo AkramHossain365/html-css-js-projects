@@ -1,0 +1,3146 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calendar</title>
+
+<style>
+/* =========================================================
+   RESET
+========================================================= */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --black: #000;
+    --white: #fff;
+    --light: #f4f4f4;
+    --line: #d5d5d5;
+    --gray: #777;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: var(--white);
+    color: var(--black);
+}
+
+button,
+input,
+textarea,
+select {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+/* =========================================================
+   MAIN APPLICATION
+========================================================= */
+.app {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+.header {
+    height: 58px;
+    min-height: 58px;
+    border-bottom: 1px solid var(--black);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 22px;
+    background: var(--white);
+    z-index: 20;
+}
+
+.logo {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.search {
+    width: 230px;
+    height: 34px;
+    border: 1px solid var(--black);
+    display: flex;
+    align-items: center;
+    padding: 0 9px;
+}
+
+.search-icon {
+    font-size: 18px;
+    margin-right: 7px;
+}
+
+.search input {
+    border: none;
+    outline: none;
+    width: 100%;
+    background: transparent;
+    font-size: 13px;
+}
+
+.header-btn {
+    height: 34px;
+    padding: 0 12px;
+    background: var(--white);
+    border: 1px solid var(--black);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.header-btn:hover {
+    background: var(--black);
+    color: var(--white);
+}
+
+/* =========================================================
+   MAIN CONTENT
+========================================================= */
+.main {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 14px 18px 16px;
+    overflow: hidden;
+}
+
+/* =========================================================
+   TOOLBAR
+========================================================= */
+.toolbar {
+    height: 42px;
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.navigation {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.nav-button {
+    width: 34px;
+    height: 34px;
+    border: 1px solid var(--black);
+    background: var(--white);
+    font-size: 19px;
+}
+
+.nav-button:hover {
+    background: var(--black);
+    color: var(--white);
+}
+
+.today-button {
+    height: 34px;
+    padding: 0 12px;
+    border: 1px solid var(--black);
+    background: var(--white);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.today-button:hover {
+    background: var(--black);
+    color: var(--white);
+}
+
+.title {
+    margin-left: 9px;
+    font-size: 22px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.views {
+    display: flex;
+    border: 1px solid var(--black);
+}
+
+.view-button {
+    height: 32px;
+    min-width: 70px;
+    border: none;
+    border-right: 1px solid var(--black);
+    background: var(--white);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.view-button:last-child {
+    border-right: none;
+}
+
+.view-button.active,
+.view-button:hover {
+    background: var(--black);
+    color: var(--white);
+}
+
+/* =========================================================
+   CONTENT AREA
+========================================================= */
+.content {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 270px;
+    gap: 12px;
+    overflow: hidden;
+}
+
+/* =========================================================
+   CALENDAR PANEL
+========================================================= */
+.calendar-panel {
+    min-width: 0;
+    min-height: 0;
+    border: 1px solid var(--black);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* =========================================================
+   MONTH VIEW
+========================================================= */
+.month-view {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.weekdays {
+    height: 32px;
+    min-height: 32px;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    border-bottom: 1px solid var(--black);
+}
+
+.weekday {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--light);
+    border-right: 1px solid var(--line);
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.weekday:last-child {
+    border-right: none;
+}
+
+.calendar-grid {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: repeat(6, minmax(0, 1fr));
+}
+
+.day {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    padding: 5px;
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.day:nth-child(7n) {
+    border-right: none;
+}
+
+.day:hover {
+    background: var(--light);
+}
+
+.day.other-month {
+    color: #aaa;
+    background: #fafafa;
+}
+
+.day.today {
+    outline: 2px solid var(--black);
+    outline-offset: -2px;
+    z-index: 2;
+}
+
+.day-number {
+    height: 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.today-label {
+    background: var(--black);
+    color: var(--white);
+    font-size: 7px;
+    padding: 2px 4px;
+}
+
+.event {
+    width: 100%;
+    height: 19px;
+    line-height: 17px;
+    margin-top: 3px;
+    padding: 0 5px;
+    border: 1px solid var(--black);
+    background: var(--white);
+    font-size: 9px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.event:hover {
+    background: var(--black);
+    color: var(--white);
+}
+
+.more-events {
+    margin-top: 3px;
+    font-size: 8px;
+    font-weight: 800;
+}
+
+/* =========================================================
+   WEEK VIEW
+========================================================= */
+.week-view {
+    display: none;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.week-view.active {
+    display: flex;
+    flex-direction: column;
+}
+
+.week-header {
+    height: 42px;
+    min-height: 42px;
+    display: grid;
+    grid-template-columns: 45px repeat(7, 1fr);
+    border-bottom: 1px solid var(--black);
+}
+
+.week-header-cell {
+    border-right: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.week-header-cell:last-child {
+    border-right: none;
+}
+
+.week-body {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 45px repeat(7, 1fr);
+    grid-template-rows: repeat(12, 1fr);
+}
+
+.week-time {
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    justify-content: center;
+    padding-top: 4px;
+    font-size: 8px;
+    color: var(--gray);
+}
+
+.week-cell {
+    min-width: 0;
+    min-height: 0;
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    padding: 3px;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.week-cell:hover {
+    background: var(--light);
+}
+
+.week-cell .event {
+    height: 17px;
+    line-height: 15px;
+    margin-top: 2px;
+    font-size: 8px;
+}
+
+/* =========================================================
+   DAY VIEW
+========================================================= */
+.day-view {
+    display: none;
+    flex: 1;
+    min-height: 0;
+    padding: 20px;
+    overflow: hidden;
+}
+
+.day-view.active {
+    display: block;
+}
+
+.day-heading {
+    font-size: 20px;
+    font-weight: 800;
+    margin-bottom: 14px;
+}
+
+.day-tasks {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: calc(100% - 45px);
+    overflow: hidden;
+}
+
+.day-task {
+    border: 1px solid var(--black);
+    padding: 11px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.day-task-info {
+    min-width: 0;
+}
+
+.day-task-title {
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.day-task-time {
+    font-size: 10px;
+    margin-top: 4px;
+}
+
+.day-task-description {
+    font-size: 10px;
+    color: var(--gray);
+    margin-top: 4px;
+}
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
+.sidebar {
+    min-width: 0;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) 180px;
+    gap: 12px;
+    overflow: hidden;
+}
+
+.card {
+    border: 1px solid var(--black);
+    padding: 13px;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.card-title {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+
+/* =========================================================
+   UPCOMING
+========================================================= */
+.upcoming-list {
+    height: calc(100% - 25px);
+    overflow: hidden;
+}
+
+.upcoming-item {
+    padding: 9px 0;
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+}
+
+.upcoming-item:hover {
+    padding-left: 4px;
+}
+
+.upcoming-item:last-child {
+    border-bottom: none;
+}
+
+.upcoming-title {
+    font-size: 11px;
+    font-weight: 800;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.upcoming-date {
+    font-size: 9px;
+    color: var(--gray);
+    margin-top: 3px;
+}
+
+.upcoming-description {
+    font-size: 9px;
+    margin-top: 3px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.empty {
+    font-size: 10px;
+    color: var(--gray);
+}
+
+/* =========================================================
+   AGE CALCULATOR
+========================================================= */
+.age-form {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.age-form input {
+    width: 100%;
+    height: 32px;
+    border: 1px solid var(--black);
+    padding: 0 8px;
+    outline: none;
+    font-size: 11px;
+}
+
+.calculate-button {
+    height: 32px;
+    border: 1px solid var(--black);
+    background: var(--black);
+    color: var(--white);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.calculate-button:hover {
+    background: var(--white);
+    color: var(--black);
+}
+
+.age-result {
+    display: none;
+    margin-top: 7px;
+    padding: 7px;
+    border: 1px solid var(--black);
+    font-size: 10px;
+    line-height: 1.4;
+}
+
+/* =========================================================
+   ADD BUTTON
+========================================================= */
+.add-button {
+    position: fixed;
+    right: 30px;
+    bottom: 25px;
+    width: 46px;
+    height: 46px;
+    border: 2px solid var(--black);
+    border-radius: 50%;
+    background: var(--black);
+    color: var(--white);
+    font-size: 22px;
+    font-weight: 400;
+    z-index: 50;
+}
+
+.add-button:hover {
+    background: var(--white);
+    color: var(--black);
+}
+
+/* =========================================================
+   SEARCH RESULTS
+========================================================= */
+.search-results {
+    position: fixed;
+    top: 52px;
+    right: 22px;
+    width: 300px;
+    max-height: 280px;
+    background: var(--white);
+    border: 1px solid var(--black);
+    z-index: 100;
+    display: none;
+    overflow: hidden;
+}
+
+.search-results.show {
+    display: block;
+}
+
+.search-result {
+    padding: 9px 11px;
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+}
+
+.search-result:hover {
+    background: var(--light);
+}
+
+.search-result strong {
+    display: block;
+    font-size: 11px;
+}
+
+.search-result small {
+    font-size: 9px;
+    color: var(--gray);
+}
+
+/* =========================================================
+   MODAL
+========================================================= */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.55);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    padding: 15px;
+}
+
+.modal-overlay.show {
+    display: flex;
+}
+
+.modal {
+    width: 100%;
+    max-width: 420px;
+    background: var(--white);
+    border: 1px solid var(--black);
+    padding: 20px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.modal-header h2 {
+    font-size: 18px;
+}
+
+.close-button {
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--black);
+    background: var(--white);
+    font-size: 17px;
+}
+
+.close-button:hover {
+    background: var(--black);
+    color: var(--white);
+}
+
+.form-group {
+    margin-bottom: 11px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 10px;
+    font-weight: 800;
+    margin-bottom: 5px;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    border: 1px solid var(--black);
+    padding: 8px;
+    outline: none;
+    font-size: 11px;
+}
+
+.form-group textarea {
+    height: 65px;
+    resize: none;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 7px;
+    margin-top: 15px;
+}
+
+.cancel-button {
+    height: 34px;
+    padding: 0 13px;
+    border: 1px solid var(--black);
+    background: var(--white);
+    font-size: 11px;
+}
+
+.save-button {
+    height: 34px;
+    padding: 0 14px;
+    border: 1px solid var(--black);
+    background: var(--black);
+    color: var(--white);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+/* Laptop / smaller desktop */
+@media (max-width: 1050px) {
+
+    .content {
+        grid-template-columns: minmax(0, 1fr) 230px;
+    }
+
+    .search {
+        width: 180px;
+    }
+
+    .title {
+        font-size: 19px;
+    }
+
+    .view-button {
+        min-width: 60px;
+    }
+
+    .sidebar {
+        grid-template-rows: minmax(0, 1fr) 170px;
+    }
+}
+
+
+/* Tablet */
+@media (max-width: 800px) {
+
+    .header {
+        padding: 0 12px;
+    }
+
+    .main {
+        padding: 10px;
+    }
+
+    .content {
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(0, 1fr) 125px;
+    }
+
+    .sidebar {
+        grid-template-columns: 1fr 220px;
+        grid-template-rows: 1fr;
+    }
+
+    .search {
+        width: 160px;
+    }
+
+    .title {
+        font-size: 17px;
+    }
+
+    .sidebar .card {
+        padding: 9px;
+    }
+
+    .upcoming-list {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0 12px;
+    }
+
+    .upcoming-item {
+        padding: 5px 0;
+    }
+}
+
+
+/* Mobile */
+@media (max-width: 600px) {
+
+    .header {
+        height: 50px;
+        min-height: 50px;
+        padding: 0 8px;
+    }
+
+    .logo {
+        font-size: 16px;
+    }
+
+    .search {
+        width: 125px;
+        height: 30px;
+    }
+
+    .header-btn {
+        height: 30px;
+        padding: 0 8px;
+        font-size: 10px;
+    }
+
+    .main {
+        padding: 7px;
+    }
+
+    .toolbar {
+        height: 72px;
+        min-height: 72px;
+        flex-wrap: wrap;
+        margin-bottom: 7px;
+    }
+
+    .navigation {
+        width: 100%;
+    }
+
+    .title {
+        font-size: 16px;
+    }
+
+    .views {
+        width: 100%;
+    }
+
+    .view-button {
+        flex: 1;
+        height: 28px;
+    }
+
+    .content {
+        grid-template-rows: minmax(0, 1fr) 95px;
+    }
+
+    .weekdays {
+        height: 27px;
+        min-height: 27px;
+    }
+
+    .weekday {
+        font-size: 8px;
+    }
+
+    .day {
+        padding: 3px;
+    }
+
+    .day-number {
+        font-size: 9px;
+        height: 14px;
+    }
+
+    .today-label {
+        display: none;
+    }
+
+    .event {
+        height: 13px;
+        line-height: 11px;
+        font-size: 7px;
+        padding: 0 2px;
+        margin-top: 2px;
+    }
+
+    .more-events {
+        font-size: 7px;
+    }
+
+    .sidebar {
+        grid-template-columns: 1fr 150px;
+    }
+
+    .card-title {
+        font-size: 9px;
+        margin-bottom: 5px;
+    }
+
+    .upcoming-item {
+        padding: 3px 0;
+    }
+
+    .upcoming-title {
+        font-size: 8px;
+    }
+
+    .upcoming-date,
+    .upcoming-description {
+        font-size: 7px;
+    }
+
+    .age-form {
+        gap: 4px;
+    }
+
+    .age-form input,
+    .calculate-button {
+        height: 25px;
+        font-size: 8px;
+    }
+
+    .age-result {
+        font-size: 8px;
+        margin-top: 3px;
+        padding: 4px;
+    }
+
+    .add-button {
+        width: 38px;
+        height: 38px;
+        right: 12px;
+        bottom: 12px;
+        font-size: 19px;
+    }
+
+    .search-results {
+        top: 48px;
+        left: 8px;
+        right: 8px;
+        width: auto;
+    }
+}
+</style>
+</head>
+
+
+<body>
+
+<div class="app">
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+    <header class="header">
+
+        <div class="logo">
+            CALENDAR
+        </div>
+
+        <div class="header-right">
+
+            <div class="search">
+
+                <span class="search-icon">⌕</span>
+
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="Search..."
+                    autocomplete="off"
+                >
+
+            </div>
+
+            <button
+                class="header-btn"
+                id="ageTopButton"
+            >
+                AGE
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <!-- =====================================================
+         SEARCH RESULTS
+    ====================================================== -->
+    <div
+        class="search-results"
+        id="searchResults"
+    ></div>
+
+
+    <!-- =====================================================
+         MAIN
+    ====================================================== -->
+    <main class="main">
+
+        <!-- TOOLBAR -->
+        <div class="toolbar">
+
+            <div class="navigation">
+
+                <button
+                    class="nav-button"
+                    id="previousButton"
+                >
+                    ‹
+                </button>
+
+                <button
+                    class="nav-button"
+                    id="nextButton"
+                >
+                    ›
+                </button>
+
+                <button
+                    class="today-button"
+                    id="todayButton"
+                >
+                    Today
+                </button>
+
+                <h1
+                    class="title"
+                    id="calendarTitle"
+                ></h1>
+
+            </div>
+
+
+            <div class="views">
+
+                <button
+                    class="view-button active"
+                    data-view="month"
+                >
+                    Month
+                </button>
+
+                <button
+                    class="view-button"
+                    data-view="week"
+                >
+                    Week
+                </button>
+
+                <button
+                    class="view-button"
+                    data-view="day"
+                >
+                    Day
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             CONTENT
+        ================================================== -->
+        <div class="content">
+
+            <!-- CALENDAR -->
+            <section class="calendar-panel">
+
+                <!-- MONTH -->
+                <div
+                    class="month-view"
+                    id="monthView"
+                >
+
+                    <div class="weekdays">
+
+                        <div class="weekday">SUN</div>
+                        <div class="weekday">MON</div>
+                        <div class="weekday">TUE</div>
+                        <div class="weekday">WED</div>
+                        <div class="weekday">THU</div>
+                        <div class="weekday">FRI</div>
+                        <div class="weekday">SAT</div>
+
+                    </div>
+
+                    <div
+                        class="calendar-grid"
+                        id="calendarGrid"
+                    ></div>
+
+                </div>
+
+
+                <!-- WEEK -->
+                <div
+                    class="week-view"
+                    id="weekView"
+                >
+
+                    <div
+                        class="week-header"
+                        id="weekHeader"
+                    ></div>
+
+                    <div
+                        class="week-body"
+                        id="weekBody"
+                    ></div>
+
+                </div>
+
+
+                <!-- DAY -->
+                <div
+                    class="day-view"
+                    id="dayView"
+                >
+
+                    <div
+                        class="day-heading"
+                        id="dayHeading"
+                    ></div>
+
+                    <div
+                        class="day-tasks"
+                        id="dayTasks"
+                    ></div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 SIDEBAR
+            ================================================== -->
+            <aside class="sidebar">
+
+                <!-- UPCOMING -->
+                <div class="card">
+
+                    <div class="card-title">
+                        Upcoming
+                    </div>
+
+                    <div
+                        class="upcoming-list"
+                        id="upcomingList"
+                    ></div>
+
+                </div>
+
+
+                <!-- AGE -->
+                <div class="card">
+
+                    <div class="card-title">
+                        Age Calculator
+                    </div>
+
+                    <div class="age-form">
+
+                        <input
+                            type="date"
+                            id="birthDate"
+                        >
+
+                        <button
+                            class="calculate-button"
+                            id="calculateAge"
+                        >
+                            Calculate
+                        </button>
+
+                    </div>
+
+                    <div
+                        class="age-result"
+                        id="ageResult"
+                    ></div>
+
+                </div>
+
+            </aside>
+
+        </div>
+
+    </main>
+
+
+    <!-- =====================================================
+         ADD BUTTON
+    ====================================================== -->
+    <button
+        class="add-button"
+        id="addButton"
+        title="Add task"
+    >
+        +
+    </button>
+
+
+    <!-- =====================================================
+         TASK MODAL
+    ====================================================== -->
+    <div
+        class="modal-overlay"
+        id="taskModal"
+    >
+
+        <div class="modal">
+
+            <div class="modal-header">
+
+                <h2>
+                    Add Task / Reminder
+                </h2>
+
+                <button
+                    class="close-button"
+                    id="closeModal"
+                >
+                    ×
+                </button>
+
+            </div>
+
+
+            <form id="taskForm">
+
+                <div class="form-group">
+
+                    <label>
+                        Task / Reminder
+                    </label>
+
+                    <input
+                        type="text"
+                        id="taskTitle"
+                        placeholder="Enter task..."
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Date
+                    </label>
+
+                    <input
+                        type="date"
+                        id="taskDate"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Time
+                    </label>
+
+                    <input
+                        type="time"
+                        id="taskTime"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Description
+                    </label>
+
+                    <textarea
+                        id="taskDescription"
+                        placeholder="Optional description..."
+                    ></textarea>
+
+                </div>
+
+
+                <div class="modal-actions">
+
+                    <button
+                        type="button"
+                        class="cancel-button"
+                        id="cancelModal"
+                    >
+                        Cancel
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="save-button"
+                    >
+                        Save Task
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+/* =========================================================
+   CALENDAR APPLICATION
+========================================================= */
+
+
+/* =========================================================
+   VARIABLES
+========================================================= */
+
+let currentDate = new Date();
+
+let selectedDate = new Date();
+
+let currentView = "month";
+
+
+let tasks = JSON.parse(
+    localStorage.getItem("blackCalendarTasks") || "[]"
+);
+
+
+/* =========================================================
+   ELEMENTS
+========================================================= */
+
+const calendarTitle =
+    document.getElementById("calendarTitle");
+
+const calendarGrid =
+    document.getElementById("calendarGrid");
+
+const monthView =
+    document.getElementById("monthView");
+
+const weekView =
+    document.getElementById("weekView");
+
+const dayView =
+    document.getElementById("dayView");
+
+const weekHeader =
+    document.getElementById("weekHeader");
+
+const weekBody =
+    document.getElementById("weekBody");
+
+const dayHeading =
+    document.getElementById("dayHeading");
+
+const dayTasks =
+    document.getElementById("dayTasks");
+
+const upcomingList =
+    document.getElementById("upcomingList");
+
+const taskModal =
+    document.getElementById("taskModal");
+
+const taskForm =
+    document.getElementById("taskForm");
+
+const taskDate =
+    document.getElementById("taskDate");
+
+const searchInput =
+    document.getElementById("searchInput");
+
+const searchResults =
+    document.getElementById("searchResults");
+
+
+/* =========================================================
+   DATE FUNCTIONS
+========================================================= */
+
+function dateToString(date) {
+
+    const year =
+        date.getFullYear();
+
+    const month =
+        String(
+            date.getMonth() + 1
+        ).padStart(2, "0");
+
+    const day =
+        String(
+            date.getDate()
+        ).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+}
+
+
+function stringToDate(value) {
+
+    const parts =
+        value.split("-");
+
+    return new Date(
+        Number(parts[0]),
+        Number(parts[1]) - 1,
+        Number(parts[2])
+    );
+}
+
+
+function sameDate(a, b) {
+
+    return (
+        a.getFullYear() === b.getFullYear() &&
+        a.getMonth() === b.getMonth() &&
+        a.getDate() === b.getDate()
+    );
+
+}
+
+
+function formatLongDate(date) {
+
+    return date.toLocaleDateString(
+        "en-US",
+        {
+            weekday: "long",
+            month: "long",
+            day: "numeric",
+            year: "numeric"
+        }
+    );
+
+}
+
+
+function monthName(month) {
+
+    return new Date(
+        2000,
+        month,
+        1
+    ).toLocaleDateString(
+        "en-US",
+        {
+            month: "long"
+        }
+    );
+
+}
+
+
+/* =========================================================
+   STORAGE
+========================================================= */
+
+function saveTasks() {
+
+    localStorage.setItem(
+        "blackCalendarTasks",
+        JSON.stringify(tasks)
+    );
+
+}
+
+
+/* =========================================================
+   GET TASKS
+========================================================= */
+
+function getTasks(date) {
+
+    const value =
+        dateToString(date);
+
+    return tasks.filter(
+        task => task.date === value
+    );
+
+}
+
+
+/* =========================================================
+   RENDER
+========================================================= */
+
+function render() {
+
+    updateTitle();
+
+    if (currentView === "month") {
+
+        renderMonth();
+
+    }
+
+    else if (currentView === "week") {
+
+        renderWeek();
+
+    }
+
+    else {
+
+        renderDay();
+
+    }
+
+    renderUpcoming();
+
+}
+
+
+/* =========================================================
+   TITLE
+========================================================= */
+
+function updateTitle() {
+
+    if (currentView === "month") {
+
+        calendarTitle.textContent =
+            `${monthName(currentDate.getMonth())} ${currentDate.getFullYear()}`;
+
+    }
+
+    else if (currentView === "week") {
+
+        const start =
+            getWeekStart(currentDate);
+
+        const end =
+            new Date(start);
+
+        end.setDate(
+            end.getDate() + 6
+        );
+
+        calendarTitle.textContent =
+            `${start.toLocaleDateString(
+                "en-US",
+                {
+                    month: "short",
+                    day: "numeric"
+                }
+            )} – ${end.toLocaleDateString(
+                "en-US",
+                {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric"
+                }
+            )}`;
+
+    }
+
+    else {
+
+        calendarTitle.textContent =
+            formatLongDate(
+                currentDate
+            );
+
+    }
+
+}
+
+
+/* =========================================================
+   MONTH VIEW
+========================================================= */
+
+function renderMonth() {
+
+    monthView.style.display = "flex";
+
+    weekView.classList.remove("active");
+
+    dayView.classList.remove("active");
+
+    calendarGrid.innerHTML = "";
+
+
+    const year =
+        currentDate.getFullYear();
+
+    const month =
+        currentDate.getMonth();
+
+
+    const firstDay =
+        new Date(
+            year,
+            month,
+            1
+        ).getDay();
+
+
+    const daysInMonth =
+        new Date(
+            year,
+            month + 1,
+            0
+        ).getDate();
+
+
+    const previousMonthDays =
+        new Date(
+            year,
+            month,
+            0
+        ).getDate();
+
+
+    /*
+       Always create 42 cells.
+       This keeps the calendar exactly one-screen.
+    */
+
+    for (let i = 0; i < 42; i++) {
+
+        let date;
+
+        let number;
+
+        let otherMonth = false;
+
+
+        if (i < firstDay) {
+
+            number =
+                previousMonthDays -
+                firstDay +
+                i +
+                1;
+
+            date =
+                new Date(
+                    year,
+                    month - 1,
+                    number
+                );
+
+            otherMonth = true;
+
+        }
+
+        else if (
+            i >= firstDay + daysInMonth
+        ) {
+
+            number =
+                i -
+                firstDay -
+                daysInMonth +
+                1;
+
+            date =
+                new Date(
+                    year,
+                    month + 1,
+                    number
+                );
+
+            otherMonth = true;
+
+        }
+
+        else {
+
+            number =
+                i -
+                firstDay +
+                1;
+
+            date =
+                new Date(
+                    year,
+                    month,
+                    number
+                );
+
+        }
+
+
+        const cell =
+            document.createElement("div");
+
+        cell.className =
+            "day";
+
+
+        if (otherMonth) {
+
+            cell.classList.add(
+                "other-month"
+            );
+
+        }
+
+
+        if (
+            sameDate(
+                date,
+                new Date()
+            )
+        ) {
+
+            cell.classList.add(
+                "today"
+            );
+
+        }
+
+
+        const dateTasks =
+            getTasks(date);
+
+
+        cell.innerHTML = `
+
+            <div class="day-number">
+
+                <span>
+                    ${number}
+                </span>
+
+                ${
+                    sameDate(
+                        date,
+                        new Date()
+                    )
+                    ? `<span class="today-label">TODAY</span>`
+                    : ""
+                }
+
+            </div>
+
+        `;
+
+
+        dateTasks
+            .slice(0, 3)
+            .forEach(task => {
+
+                const event =
+                    document.createElement(
+                        "div"
+                    );
+
+                event.className =
+                    "event";
+
+                event.textContent =
+                    task.time
+                    ? `${task.time} ${task.title}`
+                    : task.title;
+
+
+                event.title =
+                    task.title;
+
+
+                event.onclick =
+                    function(e) {
+
+                        e.stopPropagation();
+
+                        taskDetails(task);
+
+                    };
+
+
+                cell.appendChild(
+                    event
+                );
+
+            });
+
+
+        if (dateTasks.length > 3) {
+
+            const more =
+                document.createElement(
+                    "div"
+                );
+
+            more.className =
+                "more-events";
+
+            more.textContent =
+                `+${dateTasks.length - 3} more`;
+
+            cell.appendChild(
+                more
+            );
+
+        }
+
+
+        cell.onclick =
+            function() {
+
+                selectedDate =
+                    new Date(date);
+
+                openModal(
+                    selectedDate
+                );
+
+            };
+
+
+        calendarGrid.appendChild(
+            cell
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   WEEK VIEW
+========================================================= */
+
+function getWeekStart(date) {
+
+    const result =
+        new Date(date);
+
+    result.setDate(
+        result.getDate() -
+        result.getDay()
+    );
+
+    result.setHours(
+        0,
+        0,
+        0,
+        0
+    );
+
+    return result;
+
+}
+
+
+function renderWeek() {
+
+    monthView.style.display =
+        "none";
+
+    weekView.classList.add(
+        "active"
+    );
+
+    dayView.classList.remove(
+        "active"
+    );
+
+
+    weekHeader.innerHTML = "";
+
+    weekBody.innerHTML = "";
+
+
+    const blank =
+        document.createElement(
+            "div"
+        );
+
+    weekHeader.appendChild(
+        blank
+    );
+
+
+    const start =
+        getWeekStart(
+            currentDate
+        );
+
+
+    for (let i = 0; i < 7; i++) {
+
+        const date =
+            new Date(start);
+
+        date.setDate(
+            start.getDate() + i
+        );
+
+
+        const cell =
+            document.createElement(
+                "div"
+            );
+
+        cell.className =
+            "week-header-cell";
+
+
+        cell.innerHTML =
+            `${date.toLocaleDateString(
+                "en-US",
+                {
+                    weekday: "short"
+                }
+            )}<br>${date.getDate()}`;
+
+
+        if (
+            sameDate(
+                date,
+                new Date()
+            )
+        ) {
+
+            cell.style.background =
+                "#000";
+
+            cell.style.color =
+                "#fff";
+
+        }
+
+
+        weekHeader.appendChild(
+            cell
+        );
+
+    }
+
+
+    /*
+       12 rows:
+       00:00
+       02:00
+       04:00
+       ...
+       22:00
+
+       This keeps the week view compact
+       enough to fit one screen.
+    */
+
+    for (let row = 0; row < 12; row++) {
+
+        const hour =
+            row * 2;
+
+
+        const time =
+            document.createElement(
+                "div"
+            );
+
+        time.className =
+            "week-time";
+
+        time.textContent =
+            `${String(hour).padStart(2, "0")}:00`;
+
+        weekBody.appendChild(
+            time
+        );
+
+
+        for (let day = 0; day < 7; day++) {
+
+            const date =
+                new Date(start);
+
+            date.setDate(
+                start.getDate() + day
+            );
+
+
+            const cell =
+                document.createElement(
+                    "div"
+                );
+
+            cell.className =
+                "week-cell";
+
+
+            const cellTasks =
+                getTasks(date)
+                .filter(task => {
+
+                    if (!task.time) {
+
+                        return hour === 0;
+
+                    }
+
+                    const taskHour =
+                        Number(
+                            task.time.split(":")[0]
+                        );
+
+                    return (
+                        taskHour >= hour &&
+                        taskHour < hour + 2
+                    );
+
+                });
+
+
+            cellTasks
+                .slice(0, 2)
+                .forEach(task => {
+
+                    const event =
+                        document.createElement(
+                            "div"
+                        );
+
+                    event.className =
+                        "event";
+
+                    event.textContent =
+                        task.title;
+
+                    event.onclick =
+                        function(e) {
+
+                            e.stopPropagation();
+
+                            taskDetails(task);
+
+                        };
+
+                    cell.appendChild(
+                        event
+                    );
+
+                });
+
+
+            cell.onclick =
+                function() {
+
+                    selectedDate =
+                        new Date(date);
+
+                    openModal(
+                        selectedDate,
+                        hour
+                    );
+
+                };
+
+
+            weekBody.appendChild(
+                cell
+            );
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   DAY VIEW
+========================================================= */
+
+function renderDay() {
+
+    monthView.style.display =
+        "none";
+
+    weekView.classList.remove(
+        "active"
+    );
+
+    dayView.classList.add(
+        "active"
+    );
+
+
+    dayHeading.textContent =
+        formatLongDate(
+            currentDate
+        );
+
+
+    dayTasks.innerHTML = "";
+
+
+    const list =
+        getTasks(
+            currentDate
+        ).sort(
+            sortTasks
+        );
+
+
+    if (list.length === 0) {
+
+        dayTasks.innerHTML = `
+            <div class="empty">
+                No tasks or reminders for this date.
+            </div>
+        `;
+
+        return;
+
+    }
+
+
+    list
+        .slice(0, 8)
+        .forEach(task => {
+
+            const item =
+                document.createElement(
+                    "div"
+                );
+
+            item.className =
+                "day-task";
+
+
+            item.innerHTML = `
+
+                <div class="day-task-info">
+
+                    <div class="day-task-title">
+                        ${escapeHTML(task.title)}
+                    </div>
+
+                    ${
+                        task.time
+                        ? `
+                            <div class="day-task-time">
+                                ${escapeHTML(task.time)}
+                            </div>
+                          `
+                        : ""
+                    }
+
+                    ${
+                        task.description
+                        ? `
+                            <div class="day-task-description">
+                                ${escapeHTML(task.description)}
+                            </div>
+                          `
+                        : ""
+                    }
+
+                </div>
+
+                <button
+                    class="cancel-button delete-button"
+                >
+                    Delete
+                </button>
+
+            `;
+
+
+            item
+                .querySelector(
+                    ".delete-button"
+                )
+                .onclick =
+                function() {
+
+                    deleteTask(
+                        task.id
+                    );
+
+                };
+
+
+            dayTasks.appendChild(
+                item
+            );
+
+        });
+
+}
+
+
+/* =========================================================
+   SORT
+========================================================= */
+
+function sortTasks(a, b) {
+
+    const aTime =
+        a.time || "00:00";
+
+    const bTime =
+        b.time || "00:00";
+
+    return aTime.localeCompare(
+        bTime
+    );
+
+}
+
+
+/* =========================================================
+   UPCOMING
+========================================================= */
+
+function renderUpcoming() {
+
+    upcomingList.innerHTML = "";
+
+
+    const today =
+        new Date();
+
+    today.setHours(
+        0,
+        0,
+        0,
+        0
+    );
+
+
+    const upcoming =
+        tasks
+        .map(task => {
+
+            return {
+                ...task,
+                dateObject:
+                    stringToDate(
+                        task.date
+                    )
+            };
+
+        })
+        .filter(task =>
+            task.dateObject >= today
+        )
+        .sort((a, b) => {
+
+            const first =
+                `${a.date} ${a.time || "00:00"}`;
+
+            const second =
+                `${b.date} ${b.time || "00:00"}`;
+
+            return first.localeCompare(
+                second
+            );
+
+        })
+        .slice(0, 7);
+
+
+    if (upcoming.length === 0) {
+
+        upcomingList.innerHTML = `
+            <div class="empty">
+                No upcoming tasks.
+            </div>
+        `;
+
+        return;
+
+    }
+
+
+    upcoming.forEach(task => {
+
+        const item =
+            document.createElement(
+                "div"
+            );
+
+        item.className =
+            "upcoming-item";
+
+
+        const date =
+            stringToDate(
+                task.date
+            );
+
+
+        item.innerHTML = `
+
+            <div class="upcoming-title">
+                ${escapeHTML(task.title)}
+            </div>
+
+            <div class="upcoming-date">
+                ${date.toLocaleDateString(
+                    "en-US",
+                    {
+                        month: "short",
+                        day: "numeric"
+                    }
+                )}
+                ${
+                    task.time
+                    ? " • " +
+                      escapeHTML(task.time)
+                    : ""
+                }
+            </div>
+
+        `;
+
+
+        item.onclick =
+            function() {
+
+                currentDate =
+                    new Date(date);
+
+                selectedDate =
+                    new Date(date);
+
+                currentView =
+                    "day";
+
+                updateViewButtons();
+
+                render();
+
+            };
+
+
+        upcomingList.appendChild(
+            item
+        );
+
+    });
+
+}
+
+
+/* =========================================================
+   OPEN MODAL
+========================================================= */
+
+function openModal(
+    date = new Date(),
+    hour = null
+) {
+
+    taskModal.classList.add(
+        "show"
+    );
+
+
+    document.getElementById(
+        "taskTitle"
+    ).value = "";
+
+
+    document.getElementById(
+        "taskDescription"
+    ).value = "";
+
+
+    taskDate.value =
+        dateToString(date);
+
+
+    if (hour !== null) {
+
+        document.getElementById(
+            "taskTime"
+        ).value =
+            `${String(hour).padStart(2, "0")}:00`;
+
+    }
+
+    else {
+
+        document.getElementById(
+            "taskTime"
+        ).value = "";
+
+    }
+
+
+    setTimeout(() => {
+
+        document.getElementById(
+            "taskTitle"
+        ).focus();
+
+    }, 100);
+
+}
+
+
+/* =========================================================
+   CLOSE MODAL
+========================================================= */
+
+function closeModal() {
+
+    taskModal.classList.remove(
+        "show"
+    );
+
+}
+
+
+/* =========================================================
+   SAVE TASK
+========================================================= */
+
+taskForm.onsubmit =
+    function(event) {
+
+        event.preventDefault();
+
+
+        const title =
+            document.getElementById(
+                "taskTitle"
+            ).value.trim();
+
+
+        const date =
+            document.getElementById(
+                "taskDate"
+            ).value;
+
+
+        const time =
+            document.getElementById(
+                "taskTime"
+            ).value;
+
+
+        const description =
+            document.getElementById(
+                "taskDescription"
+            ).value.trim();
+
+
+        if (!title || !date) {
+
+            return;
+
+        }
+
+
+        tasks.push({
+
+            id: Date.now(),
+
+            title: title,
+
+            date: date,
+
+            time: time,
+
+            description: description
+
+        });
+
+
+        saveTasks();
+
+        closeModal();
+
+        render();
+
+    };
+
+
+/* =========================================================
+   DELETE TASK
+========================================================= */
+
+function deleteTask(id) {
+
+    const confirmDelete =
+        confirm(
+            "Delete this task?"
+        );
+
+
+    if (!confirmDelete) {
+
+        return;
+
+    }
+
+
+    tasks =
+        tasks.filter(
+            task => task.id !== id
+        );
+
+
+    saveTasks();
+
+    render();
+
+}
+
+
+/* =========================================================
+   TASK DETAILS
+========================================================= */
+
+function taskDetails(task) {
+
+    const text =
+        `${task.title}\n\n` +
+        `Date: ${task.date}\n` +
+        `Time: ${task.time || "No time"}\n\n` +
+        `${task.description || "No description"}\n\n` +
+        `Press OK to delete this task.`;
+
+
+    if (confirm(text)) {
+
+        deleteTask(
+            task.id
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+document.getElementById(
+    "previousButton"
+).onclick =
+    function() {
+
+        if (currentView === "month") {
+
+            currentDate.setMonth(
+                currentDate.getMonth() - 1
+            );
+
+        }
+
+        else if (currentView === "week") {
+
+            currentDate.setDate(
+                currentDate.getDate() - 7
+            );
+
+        }
+
+        else {
+
+            currentDate.setDate(
+                currentDate.getDate() - 1
+            );
+
+        }
+
+        render();
+
+    };
+
+
+document.getElementById(
+    "nextButton"
+).onclick =
+    function() {
+
+        if (currentView === "month") {
+
+            currentDate.setMonth(
+                currentDate.getMonth() + 1
+            );
+
+        }
+
+        else if (currentView === "week") {
+
+            currentDate.setDate(
+                currentDate.getDate() + 7
+            );
+
+        }
+
+        else {
+
+            currentDate.setDate(
+                currentDate.getDate() + 1
+            );
+
+        }
+
+        render();
+
+    };
+
+
+/* =========================================================
+   TODAY
+========================================================= */
+
+document.getElementById(
+    "todayButton"
+).onclick =
+    function() {
+
+        currentDate =
+            new Date();
+
+        selectedDate =
+            new Date();
+
+        render();
+
+    };
+
+
+/* =========================================================
+   VIEW SWITCH
+========================================================= */
+
+document
+    .querySelectorAll(
+        ".view-button"
+    )
+    .forEach(button => {
+
+        button.onclick =
+            function() {
+
+                currentView =
+                    this.dataset.view;
+
+                updateViewButtons();
+
+                render();
+
+            };
+
+    });
+
+
+function updateViewButtons() {
+
+    document
+        .querySelectorAll(
+            ".view-button"
+        )
+        .forEach(button => {
+
+            button.classList.toggle(
+                "active",
+                button.dataset.view ===
+                currentView
+            );
+
+        });
+
+}
+
+
+/* =========================================================
+   ADD BUTTON
+========================================================= */
+
+document.getElementById(
+    "addButton"
+).onclick =
+    function() {
+
+        openModal(
+            selectedDate
+        );
+
+    };
+
+
+/* =========================================================
+   MODAL CONTROLS
+========================================================= */
+
+document.getElementById(
+    "closeModal"
+).onclick =
+    closeModal;
+
+
+document.getElementById(
+    "cancelModal"
+).onclick =
+    closeModal;
+
+
+taskModal.onclick =
+    function(event) {
+
+        if (
+            event.target ===
+            taskModal
+        ) {
+
+            closeModal();
+
+        }
+
+    };
+
+
+/* =========================================================
+   AGE CALCULATOR
+========================================================= */
+
+document.getElementById(
+    "calculateAge"
+).onclick =
+    calculateAge;
+
+
+function calculateAge() {
+
+    const value =
+        document.getElementById(
+            "birthDate"
+        ).value;
+
+
+    const result =
+        document.getElementById(
+            "ageResult"
+        );
+
+
+    if (!value) {
+
+        result.style.display =
+            "block";
+
+        result.textContent =
+            "Select your birth date.";
+
+        return;
+
+    }
+
+
+    const birth =
+        stringToDate(value);
+
+    const today =
+        new Date();
+
+
+    if (birth > today) {
+
+        result.style.display =
+            "block";
+
+        result.textContent =
+            "Invalid birth date.";
+
+        return;
+
+    }
+
+
+    let years =
+        today.getFullYear() -
+        birth.getFullYear();
+
+
+    let months =
+        today.getMonth() -
+        birth.getMonth();
+
+
+    let days =
+        today.getDate() -
+        birth.getDate();
+
+
+    if (days < 0) {
+
+        months--;
+
+        const previousMonth =
+            new Date(
+                today.getFullYear(),
+                today.getMonth(),
+                0
+            );
+
+        days +=
+            previousMonth.getDate();
+
+    }
+
+
+    if (months < 0) {
+
+        years--;
+
+        months += 12;
+
+    }
+
+
+    result.style.display =
+        "block";
+
+
+    result.innerHTML =
+        `<strong>${years}</strong> years, ` +
+        `<strong>${months}</strong> months, ` +
+        `<strong>${days}</strong> days`;
+
+}
+
+
+/* =========================================================
+   AGE HEADER BUTTON
+========================================================= */
+
+document.getElementById(
+    "ageTopButton"
+).onclick =
+    function() {
+
+        document.getElementById(
+            "birthDate"
+        ).focus();
+
+    };
+
+
+/* =========================================================
+   SEARCH
+========================================================= */
+
+searchInput.oninput =
+    function() {
+
+        const query =
+            this.value
+                .trim()
+                .toLowerCase();
+
+
+        searchResults.innerHTML = "";
+
+
+        if (!query) {
+
+            searchResults.classList.remove(
+                "show"
+            );
+
+            return;
+
+        }
+
+
+        const results =
+            tasks.filter(task => {
+
+                return (
+                    task.title
+                        .toLowerCase()
+                        .includes(query) ||
+
+                    task.description
+                        .toLowerCase()
+                        .includes(query) ||
+
+                    task.date
+                        .includes(query)
+                );
+
+            });
+
+
+        if (results.length === 0) {
+
+            searchResults.innerHTML = `
+                <div class="search-result">
+                    <strong>No results found</strong>
+                    <small>
+                        Try another search.
+                    </small>
+                </div>
+            `;
+
+        }
+
+
+        results
+            .slice(0, 10)
+            .forEach(task => {
+
+                const item =
+                    document.createElement(
+                        "div"
+                    );
+
+                item.className =
+                    "search-result";
+
+
+                item.innerHTML = `
+
+                    <strong>
+                        ${escapeHTML(task.title)}
+                    </strong>
+
+                    <small>
+                        ${task.date}
+                        ${
+                            task.time
+                            ? " • " +
+                              escapeHTML(task.time)
+                            : ""
+                        }
+                    </small>
+
+                `;
+
+
+                item.onclick =
+                    function() {
+
+                        currentDate =
+                            stringToDate(
+                                task.date
+                            );
+
+                        selectedDate =
+                            new Date(
+                                currentDate
+                            );
+
+                        currentView =
+                            "day";
+
+                        updateViewButtons();
+
+                        render();
+
+                        searchInput.value =
+                            "";
+
+                        searchResults.classList.remove(
+                            "show"
+                        );
+
+                    };
+
+
+                searchResults.appendChild(
+                    item
+                );
+
+            });
+
+
+        searchResults.classList.add(
+            "show"
+        );
+
+    };
+
+
+/* =========================================================
+   CLOSE SEARCH
+========================================================= */
+
+document.addEventListener(
+    "click",
+    function(event) {
+
+        if (
+            !event.target.closest(
+                ".search"
+            ) &&
+            !event.target.closest(
+                ".search-results"
+            )
+        ) {
+
+            searchResults.classList.remove(
+                "show"
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   ESCAPE HTML
+========================================================= */
+
+function escapeHTML(value) {
+
+    return String(value)
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
+}
+
+
+/* =========================================================
+   KEYBOARD SHORTCUTS
+========================================================= */
+
+document.addEventListener(
+    "keydown",
+    function(event) {
+
+        if (
+            event.key === "Escape"
+        ) {
+
+            closeModal();
+
+            searchResults.classList.remove(
+                "show"
+            );
+
+        }
+
+
+        if (
+            event.key.toLowerCase() === "n" &&
+            !event.target.matches(
+                "input, textarea"
+            )
+        ) {
+
+            openModal(
+                selectedDate
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   INITIALIZE
+========================================================= */
+
+selectedDate =
+    new Date();
+
+render();
+
+</script>
+
+</body>
+</html>
+
